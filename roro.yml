@@ -1,0 +1,11 @@
+
+# rorodata config file
+# The `roro deploy` command uses this to deploy this project in the rorodata platform
+# 
+project: facial-recognition-demo
+runtime: python3-keras
+
+services:
+    - name: default
+      function: predict.predict
+      size: S1

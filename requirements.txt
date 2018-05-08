@@ -1,0 +1,3 @@
+keras-vggface
+opencv-python
+pillow
