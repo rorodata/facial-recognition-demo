@@ -1,72 +1,62 @@
-import joblib
-import os
-import sys
+import cv2 as cv
 from glob import glob
-
+import os
 import numpy as np
+import joblib
+import matplotlib.pyplot as plt
 from keras.engine import  Model
-from keras.layers import Flatten, Dense, Input
-from keras.preprocessing.image import ImageDataGenerator
-from keras.preprocessing import image
+from keras.layers import Input
 from keras_vggface.vggface import VGGFace
+from keras.preprocessing import image
 from keras_vggface import utils
-from keras.models import load_model
 
-def train():
-    train_datagen = ImageDataGenerator(
-            #rotation_range=40,
-            #width_shift_range=0.2,
-            #height_shift_range=0.2,
-            rescale=1./255,
-            #shear_range=0.2,
-            zoom_range=0.2,
-            #horizontal_flip=True,
-            fill_mode='nearest')
+TRAINING_DIR = os.getenv("TRAINING_DIR", "/volumes/data/training")
+MODEL_FILE = os.getenv("MODEL_PATH", "/volumes/data/vgg_features.model")
+LABEL_FILE = os.getenv("LABEL_PATH", "/volumes/data/label_vectors.dict")
+CASCADE_FILE = os.getenv("CASCADE_PATH", "/volumes/data/haarcascade_frontalface_alt.xml")
 
-    # Figure out how many classes there should be.
-    nb_class = len(os.listdir('/volumes/data/data/train'))
+def process_image(image):
+    img = cv.resize(image, (224, 224))
+    img = img.astype(np.float32)
+    img = np.expand_dims(img, axis=0)
+    img = utils.preprocess_input(img, version=2)
+    return img
 
-    if nb_class < 2:
-        print('There should be at least 2 classes to predict on.')
-        sys.exit(1)
+def labels_to_images(path_to_images):
+    files = glob(path_to_images + '/*')
+    label_files = {os.path.basename(f).split('.')[0] : f for f in files}
 
+    label_images = {label : cv.imread(path) 
+            for label, path in label_files.items()}
 
-    vgg_model = VGGFace(model='resnet50', include_top=False, input_shape=(224, 224, 3))
+    return label_images
 
-    last_layer = vgg_model.get_layer('avg_pool').output
-    x = Flatten(name='flatten')(last_layer)
-    x = Dense(1024, activation='relu', name='fc1')(x)
-    x = Dense(512, activation='relu', name='fc2')(x)
-    out = Dense(nb_class, activation='softmax', name='classifier')(x)
+def labels_to_vector(label_images):
+    label_images = {label : process_image(img) 
+            for label, img in label_images.items()}
 
-    custom_vgg_model = Model(vgg_model.input, out)
+    label_vector = {label : vgg_features.predict(img)
+            for label, img in label_images.items()}
 
-    for layer in vgg_model.layers:
-        layer.trainable = False
-    
-    custom_vgg_model.compile(
-          loss='categorical_crossentropy',
-          optimizer='adam',
-          metrics=['accuracy'])
+    return label_vector
 
-    batch_size = 15
+def extract_vectors():
+    # Convolution Features
+    vgg_features = VGGFace(
+        model='resnet50',
+        include_top=False,
+        input_shape=(224, 224, 3),
+        pooling='avg') # pooling: None, avg or max
 
-    train_generator = train_datagen.flow_from_directory(
-            '/volumes/data/data/train',
-            target_size=(224, 224),
-            batch_size=batch_size,
-            class_mode='categorical')
+    haar_face_cascade = cv.CascadeClassifier(CASCADE_FILE)
 
-    custom_vgg_model.fit_generator(
-            train_generator,
-            steps_per_epoch=15 // batch_size,
-            epochs=100)
+    labels_images = labels_to_images(TRAINING_PATH)
+    labels_vectors = labels_to_vector(labels_images)
 
-    joblib.dump(train_generator.class_indices, '/volumes/data/class_indices.dict')
-
-    custom_vgg_model.save('/volumes/data/vgg_model.h5')
-
+    joblib.dump(labels_vectors, LABEL_FILE)
+    joblib.dump(vgg_features, MODEL_FILE)
 
 if __name__ == '__main__':
-    train()
-    
+
+    extract_vectors()
+
