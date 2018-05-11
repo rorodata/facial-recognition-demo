@@ -3,7 +3,6 @@ from glob import glob
 import os
 import numpy as np
 import joblib
-import matplotlib.pyplot as plt
 from PIL import Image
 import io
 import binascii

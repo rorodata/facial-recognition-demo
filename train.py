@@ -3,7 +3,6 @@ from glob import glob
 import os
 import numpy as np
 import joblib
-import matplotlib.pyplot as plt
 from keras.engine import  Model
 from keras.layers import Input
 from keras_vggface.vggface import VGGFace
