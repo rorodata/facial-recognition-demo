@@ -6,5 +6,5 @@ runtime: python3-keras
 
 services:
     - name: default
-    function: evaluation.tag_faces
-    size: S1
+      function: evaluation.tag_faces
+      size: S1

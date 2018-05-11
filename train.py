@@ -13,7 +13,6 @@ from keras_vggface import utils
 TRAINING_DIR = os.getenv("TRAINING_DIR", "/volumes/data/training")
 MODEL_FILE = os.getenv("MODEL_PATH", "/volumes/data/vgg_features.model")
 LABEL_FILE = os.getenv("LABEL_PATH", "/volumes/data/label_vectors.dict")
-CASCADE_FILE = os.getenv("CASCADE_PATH", "/volumes/data/haarcascade_frontalface_alt.xml")
 
 def process_image(image):
     img = cv.resize(image, (224, 224))
@@ -46,11 +45,9 @@ def extract_vectors():
         model='resnet50',
         include_top=False,
         input_shape=(224, 224, 3),
-        pooling='avg') # pooling: None, avg or max
+        pooling='avg') 
 
-    haar_face_cascade = cv.CascadeClassifier(CASCADE_FILE)
-
-    labels_images = labels_to_images(TRAINING_PATH)
+    labels_images = labels_to_images(TRAINING_DIR)
     labels_vectors = labels_to_vector(labels_images)
 
     joblib.dump(labels_vectors, LABEL_FILE)
