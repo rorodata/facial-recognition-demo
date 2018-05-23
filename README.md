@@ -1,4 +1,4 @@
-# facial-recognition-demo
+# face-recognition-demo-tl
 
 <p>
 <img style="display: inline;" src="images/new_image.jpg">
